@@ -4,14 +4,19 @@ import { useLocation } from 'react-router-dom';
 import { OrderCardProps } from './type';
 import { TIngredient } from '@utils-types';
 import { OrderCardUI } from '../ui/order-card';
+import { useAppSelector } from '../../services/store';
+import type { RootState } from '../../services/store';
+import { useModalNavigation } from '../../hooks/useModalNavigation';
 
 const maxIngredients = 6;
 
 export const OrderCard: FC<OrderCardProps> = memo(({ order }) => {
   const location = useLocation();
+  const { navigateToOrder } = useModalNavigation();
 
-  /** TODO: взять переменную из стора */
-  const ingredients: TIngredient[] = [];
+  const ingredients: TIngredient[] = useAppSelector(
+    (state: RootState) => state.ingredients.items
+  );
 
   const orderInfo = useMemo(() => {
     if (!ingredients.length) return null;
@@ -47,11 +52,20 @@ export const OrderCard: FC<OrderCardProps> = memo(({ order }) => {
 
   if (!orderInfo) return null;
 
+  const handleOrderClick = () => {
+    // Определяем базовый путь в зависимости от текущего маршрута
+    const basePath = location.pathname.includes('/profile/orders')
+      ? '/profile/orders'
+      : '/feed';
+    navigateToOrder(order, basePath);
+  };
+
   return (
     <OrderCardUI
       orderInfo={orderInfo}
       maxIngredients={maxIngredients}
       locationState={{ background: location }}
+      onOrderClick={handleOrderClick}
     />
   );
 });
